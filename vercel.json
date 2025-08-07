@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm install --production=false && npm run build",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
