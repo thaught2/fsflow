@@ -1,40 +1,64 @@
-// components/TaskForm.tsx
-import React, { useState } from 'react';
+"use client";
 
-const TaskForm = () => {
-  const [title, setTitle] = useState('');
-  const [dueDate, setDueDate] = useState('');
+import { useState } from "react";
 
-  const handleSubmit = (e: React.FormEvent) => {
+export default function TaskForm() {
+  const [title, setTitle] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
+  const [dueDate, setDueDate] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Submitting:', { title, dueDate });
-    // Integration with Supabase will go here later
+    const taskData = { title, assigned_to: assignedTo, due_date: dueDate };
+
+    const res = await fetch("/api/create-task", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(taskData),
+    });
+
+    if (res.ok) {
+      alert("Task created!");
+      setTitle("");
+      setAssignedTo("");
+      setDueDate("");
+    } else {
+      alert("Error creating task");
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Task Title:
+    <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded">
+      <div>
+        <label>Title:</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          required
+          className="border p-2 w-full"
         />
-      </label>
-      <br />
-      <label>
-        Due Date:
+      </div>
+      <div>
+        <label>Assigned To (user ID):</label>
+        <input
+          type="text"
+          value={assignedTo}
+          onChange={(e) => setAssignedTo(e.target.value)}
+          className="border p-2 w-full"
+        />
+      </div>
+      <div>
+        <label>Due Date:</label>
         <input
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
+          className="border p-2 w-full"
         />
-      </label>
-      <br />
-      <button type="submit">Create Task</button>
+      </div>
+      <button type="submit" className="bg-blue-600 text-white p-2 rounded">
+        Create Task
+      </button>
     </form>
   );
-};
-
-export default TaskForm;
+}
