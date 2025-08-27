@@ -15,3 +15,15 @@ const App = () => (
 );
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import AdminRequestForm from './pages/form';
+import Login from './pages/login';
+
+<Router>
+  <Routes>
+    <Route path="/" element={<Login />} />
+    <Route path="/form" element={<AdminRequestForm />} />
+  </Routes>
+</Router>
+
