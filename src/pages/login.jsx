@@ -1,49 +1,46 @@
+// src/pages/login.jsx
 import { useState } from 'react';
-import { supabase } from '../utils/supabaseClient'; // we'll create this file next
 import { useRouter } from 'next/router';
+import supabase from '../lib/supabaseClient';
 
 export default function Login() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const router = useRouter();
+  const [error, setError] = useState(null);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setErrorMsg(error.message);
+      setError(error.message);
     } else {
-      router.push('/dashboard'); // Replace with your actual landing page
+      router.push('/dashboard');
     }
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Login</h2>
+    <div style={{ padding: 20 }}>
+      <h1>Login</h1>
       <form onSubmit={handleLogin}>
-        <div>
-          <label>Email</label><br/>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Password</label><br/>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" style={{ marginTop: '1rem' }}>Log In</button>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        /><br /><br />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        /><br /><br />
+        <button type="submit">Log In</button>
       </form>
-      {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
   );
 }
