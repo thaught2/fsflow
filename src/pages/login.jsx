@@ -1,10 +1,9 @@
-// src/pages/login.jsx
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router-dom';
 import supabase from '../lib/supabaseClient';
 
 export default function Login() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
@@ -16,7 +15,7 @@ export default function Login() {
     if (error) {
       setError(error.message);
     } else {
-      router.push('/dashboard');
+      navigate('/dashboard');
     }
   };
 
