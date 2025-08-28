@@ -1,6 +1,6 @@
 // src/pages/form.jsx
 import React, { useState } from 'react';
-import supabase from '../supabaseClient';
+import { supabase } from '../supabaseClient';
 
 export default function AdminRequestForm() {
   const [formData, setFormData] = useState({
@@ -65,4 +65,4 @@ export default function AdminRequestForm() {
       </form>
     </div>
   );
-} 
+}
