@@ -32,13 +32,23 @@ export default function AdminRequestForm() {
       <form onSubmit={handleSubmit}>
         <label>
           Requester Name:
-          <input name="requesterName" value={formData.requesterName} onChange={handleChange} required />
+          <input
+            name="requesterName"
+            value={formData.requesterName}
+            onChange={handleChange}
+            required
+          />
         </label>
         <br /><br />
 
         <label>
           Request Type:
-          <select name="requestType" value={formData.requestType} onChange={handleChange} required>
+          <select
+            name="requestType"
+            value={formData.requestType}
+            onChange={handleChange}
+            required
+          >
             <option value="">-- Select --</option>
             <option value="Document Processing">Document Processing</option>
             <option value="Meeting Coordination">Meeting Coordination</option>
@@ -51,13 +61,22 @@ export default function AdminRequestForm() {
 
         <label>
           Job Title:
-          <input name="jobTitle" value={formData.jobTitle} onChange={handleChange} />
+          <input
+            name="jobTitle"
+            value={formData.jobTitle}
+            onChange={handleChange}
+          />
         </label>
         <br /><br />
 
         <label>
           Instructions:
-          <textarea name="instructions" value={formData.instructions} onChange={handleChange} rows={4} />
+          <textarea
+            name="instructions"
+            value={formData.instructions}
+            onChange={handleChange}
+            rows={4}
+          />
         </label>
         <br /><br />
 
