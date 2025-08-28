@@ -1,8 +1,11 @@
 // src/supabaseClient.js
 import { createClient } from '@supabase/supabase-js';
 
-// Replace these with your own Supabase Project URL and anon key
+// These are pulled from your Vite environment variables (.env or Vercel project settings)
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Export as default so you can "import supabase from '../supabaseClient';"
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export default supabase;
