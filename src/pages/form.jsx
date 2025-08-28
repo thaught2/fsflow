@@ -1,62 +1,107 @@
-// src/pages/form.jsx
-import React, { useState } from 'react';
+-- Enable UUIDs (if not already)
+create extension if not exists "uuid-ossp";
 
-export default function AdminRequestForm() {
-  const [formData, setFormData] = useState({
-    requesterName: '',
-    requestType: '',
-    jobTitle: '',
-    instructions: ''
-  });
+-- USERS (optional "profiles" table to store role)
+create table if not exists profiles (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid unique not null,
+  full_name text,
+  role text default 'submitter', -- submitter | admin | reviewer | viewer
+  created_at timestamptz default now()
+);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+-- REFERENCE: Clients
+create table if not exists clients (
+  id uuid primary key default uuid_generate_v4(),
+  name text unique not null
+);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form Submitted:", formData);
-    // In future: POST to Supabase
-  };
+-- REFERENCE: Job Types
+create table if not exists job_types (
+  id uuid primary key default uuid_generate_v4(),
+  name text unique not null
+);
 
-  return (
-    <div style={{ padding: "2rem" }}>
-      <h1>Submit Admin Request</h1>
-      <form onSubmit={handleSubmit}>
-        <label>
-          Requester Name:
-          <input name="requesterName" value={formData.requesterName} onChange={handleChange} required />
-        </label>
-        <br /><br />
+-- MAIN: Jobs
+create table if not exists jobs (
+  id uuid primary key default uuid_generate_v4(),
+  job_id text generated always as (
+    to_char(now(), 'MM') || '-' || lpad((extract(epoch from clock_timestamp())::bigint % 10000)::text, 4, '0')
+  ) stored, -- simple unique-ish month counter
+  submitter_id uuid not null,
+  requestor text,
+  client_id uuid references clients(id) on delete set null,
+  matter text,
+  request_type_id uuid references job_types(id) on delete set null,
+  rush boolean default false,
+  vip boolean default false,
+  pages integer,
+  instructions text,
+  due_datetime timestamptz,
+  status text default 'pending', -- pending | in_progress | qc | complete
+  created_at timestamptz default now()
+);
 
-        <label>
-          Request Type:
-          <select name="requestType" value={formData.requestType} onChange={handleChange} required>
-            <option value="">-- Select --</option>
-            <option value="Document Processing">Document Processing</option>
-            <option value="Meeting Coordination">Meeting Coordination</option>
-            <option value="Travel">Travel</option>
-            <option value="Time Entry">Time Entry</option>
-            <option value="Shipping">Shipping</option>
-          </select>
-        </label>
-        <br /><br />
+-- RLS
+alter table profiles enable row level security;
+alter table jobs enable row level security;
+alter table clients enable row level security;
+alter table job_types enable row level security;
 
-        <label>
-          Job Title:
-          <input name="jobTitle" value={formData.jobTitle} onChange={handleChange} />
-        </label>
-        <br /><br />
+-- Simple policies for MVP (any authenticated user can read & write)
+do $$
+begin
+  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'profiles') then
+    create policy "profiles read own" on profiles for select using (auth.uid() = user_id);
+    create policy "profiles upsert own" on profiles for insert with check (auth.uid() = user_id);
+    create policy "profiles update own" on profiles for update using (auth.uid() = user_id);
+  end if;
 
-        <label>
-          Instructions:
-          <textarea name="instructions" value={formData.instructions} onChange={handleChange} rows={4} />
-        </label>
-        <br /><br />
+  if not exists (select 1 from pg_policies where tablename = 'clients') then
+    create policy "clients read" on clients for select using (true);
+    create policy "clients insert" on clients for insert with check (true);
+  end if;
 
-        <button type="submit">Submit Request</button>
-      </form>
-    </div>
-  );
-}
+  if not exists (select 1 from pg_policies where tablename = 'job_types') then
+    create policy "job_types read" on job_types for select using (true);
+    create policy "job_types insert" on job_types for insert with check (true);
+  end if;
+
+  if not exists (select 1 from pg_policies where tablename = 'jobs') then
+    create policy "jobs read" on jobs for select using (auth.role() = 'authenticated');
+    create policy "jobs insert" on jobs for insert with check (auth.role() = 'authenticated');
+  end if;
+end$$;
+
+-- Seed some refs (optional)
+insert into clients (name) values ('Acme Co.'), ('Globex'), ('Initech')
+on conflict (name) do nothing;
+
+insert into job_types (name) values ('Scan'), ('Copy/Print'), ('Bind/Assemble')
+on conflict (name) do nothing;
+
+-- 1. Create the requests table
+create table if not exists public.requests (
+  id bigint generated by default as identity primary key,
+  requesterName text,
+  requestType text,
+  jobTitle text,
+  instructions text,
+  created_at timestamptz default now()
+);
+
+-- 2. Allow authenticated users to insert new rows
+create policy "Allow inserts"
+on public.requests
+as permissive
+for insert
+to authenticated
+with check (true);
+
+-- 3. Allow authenticated users to read rows
+create policy "Allow read"
+on public.requests
+as permissive
+for select
+to authenticated
+using (true);
